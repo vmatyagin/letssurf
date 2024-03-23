@@ -33,7 +33,10 @@ const createMap = async (mapboxgl) => {
 
     console.log(users);
 
-    const defaultAvatar = "./assets/surfer.png";
+    const defaultAvatar =
+        window.location.hostname === "localhost"
+            ? "./assets/surfer.png"
+            : "https://vmatyagin.github.io/letssurf/assets/surfer.png";
 
     const mapSource = {
         type: "FeatureCollection",
@@ -65,19 +68,13 @@ const createMap = async (mapboxgl) => {
         filter: ["!=", "cluster", true],
         paint: {
             "circle-opacity": 0.0
-        },
-        layout: {
-            "text-field": ["get", "title"]
         }
     });
 
     map.addLayer({
         id: "points",
         type: "symbol",
-        source: "usersGeojson",
-        layout: {
-            "icon-image": "custom-marker"
-        }
+        source: "usersGeojson"
     });
 
     let markers = {};
