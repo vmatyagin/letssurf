@@ -74,7 +74,13 @@ const createMap = async (mapboxgl) => {
     map.addLayer({
         id: "points",
         type: "symbol",
-        source: "usersGeojson"
+        source: "usersGeojson",
+        layout: {
+            "text-field": ["get", "id"],
+            "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+            "text-offset": [0, 1.25],
+            "text-anchor": "top"
+        }
     });
 
     let markers = {};
@@ -153,6 +159,9 @@ const createMap = async (mapboxgl) => {
     function avatarOrDefault(avatar) {
         return avatar && avatar !== "null" ? avatar : defaultAvatar;
     }
+    map.on("load", () => {
+        updateMarkers();
+    });
 
     map.on("data", function (e) {
         if (e.sourceId !== "usersGeojson" || !e.isSourceLoaded) {
@@ -162,10 +171,6 @@ const createMap = async (mapboxgl) => {
         map.on("moveend", updateMarkers);
         updateMarkers();
     });
-
-    setTimeout(() => {
-        updateMarkers();
-    }, 1000);
 };
 
 const start = () => {
