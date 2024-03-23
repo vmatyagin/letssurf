@@ -1,0 +1,37 @@
+:root {
+    --block-bg-color: gray;
+}
+.people-map-user-marker {
+    display: block;
+    cursor: pointer;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: 50% 50%;
+    border: solid 2px var(--block-bg-color);
+    background-color: #ccc;
+}
+
+.people-map-user-marker:hover {
+    width: 50px;
+    height: 50px;
+}
+
+.people-map-user-cluster {
+    display: block;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: 50% 50%;
+    background-color: var(--block-bg-color);
+    border: solid 2px var(--block-bg-color);
+    color: #fff;
+    text-shadow: 0 0 2px black;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 30px;
+}
