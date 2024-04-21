@@ -63,50 +63,8 @@ const createMap = async (mapboxgl) => {
         }))
     };
 
-    map.addSource("usersGeojson", {
-        type: "geojson",
-        data: mapSource,
-        cluster: true,
-        clusterRadius: 25
-    });
-
-    map.addLayer({
-        id: "points",
-        type: "symbol",
-        source: "usersGeojson",
-        layout: {
-            "text-field": ["get", "name"],
-            "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-            "text-offset": [0, 1.25],
-            "text-anchor": "top",
-            "text-size": 12
-        }
-    });
-
     let markers = {};
     let markersOnScreen = {};
-
-    map.on("click", "points", (e) => {
-        const coordinates = e.features[0].geometry.coordinates.slice();
-        const description = e.features[0].properties.description;
-
-        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-        }
-
-        new mapboxgl.Popup()
-            .setLngLat(coordinates)
-            .setHTML(description)
-            .addTo(map);
-    });
-
-    map.on("mouseenter", "points", () => {
-        map.getCanvas().style.cursor = "pointer";
-    });
-
-    map.on("mouseleave", "points", () => {
-        map.getCanvas().style.cursor = "";
-    });
 
     function updateMarkers() {
         let newMarkers = {};
@@ -185,7 +143,49 @@ const createMap = async (mapboxgl) => {
         return avatar && avatar !== "null" ? avatar : defaultAvatar;
     }
     map.on("load", () => {
+        map.addSource("usersGeojson", {
+            type: "geojson",
+            data: mapSource,
+            cluster: true,
+            clusterRadius: 25
+        });
+
+        map.addLayer({
+            id: "points",
+            type: "symbol",
+            source: "usersGeojson",
+            layout: {
+                "text-field": ["get", "name"],
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-offset": [0, 1.25],
+                "text-anchor": "top",
+                "text-size": 12
+            }
+        });
+
         updateMarkers();
+
+        map.on("click", "points", (e) => {
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const description = e.features[0].properties.description;
+
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+
+            new mapboxgl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(description)
+                .addTo(map);
+        });
+
+        map.on("mouseenter", "points", () => {
+            map.getCanvas().style.cursor = "pointer";
+        });
+
+        map.on("mouseleave", "points", () => {
+            map.getCanvas().style.cursor = "";
+        });
     });
 
     map.on("data", function (e) {
