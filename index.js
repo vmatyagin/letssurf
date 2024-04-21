@@ -186,6 +186,11 @@ const createMap = async (mapboxgl) => {
         map.on("mouseleave", "points", () => {
             map.getCanvas().style.cursor = "";
         });
+
+        // перерисовка иконок
+        setTimeout(() => {
+            updateMarkers();
+        }, 250);
     });
 
     map.on("data", function (e) {
