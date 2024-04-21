@@ -86,6 +86,28 @@ const createMap = async (mapboxgl) => {
     let markers = {};
     let markersOnScreen = {};
 
+    map.on("click", "points", (e) => {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const description = e.features[0].properties.description;
+
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(map);
+    });
+
+    map.on("mouseenter", "points", () => {
+        map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", "points", () => {
+        map.getCanvas().style.cursor = "";
+    });
+
     function updateMarkers() {
         let newMarkers = {};
         let features = map.querySourceFeatures("usersGeojson");
