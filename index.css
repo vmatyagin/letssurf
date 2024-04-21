@@ -1,7 +1,7 @@
 :root {
     --block-bg-color: gray;
 }
-.people-map-user-marker {
+.mapMarker {
     display: block;
     cursor: pointer;
     width: 25px;
@@ -11,14 +11,17 @@
     background-position: 50% 50%;
     border: solid 2px var(--block-bg-color);
     background-color: #ccc;
+    transition-property: width, height;
+    transition-duration: 0.3s;
+    transition-behavior: ease;
 }
 
-.people-map-user-marker:hover {
-    width: 50px;
-    height: 50px;
+.mapMarker:hover {
+    width: 40px;
+    height: 40px;
 }
 
-.people-map-user-cluster {
+.mapCluster {
     display: block;
     cursor: pointer;
     width: 30px;
@@ -34,4 +37,9 @@
     font-weight: 700;
     font-size: 15px;
     line-height: 30px;
+}
+
+.mapboxgl-popup {
+    max-width: 400px;
+    font: 12px/20px "Helvetica Neue", Arial, Helvetica, sans-serif;
 }

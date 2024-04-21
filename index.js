@@ -11,27 +11,31 @@ const createMap = async (mapboxgl) => {
         language: "ru"
     });
 
-    const sheetId = "1Edy0_vI_vObETD96SI-FnRJqtNuPy0dVu64kl-_CsE0";
-    const sheetGid = "1816724719";
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq&gid=${sheetGid}`;
+    const url = `https://matyagin.ru/surfbot`;
 
-    const json = await fetch(url)
-        .then((response) => response.text())
-        .then((data) => JSON.parse(data.substring(47, data.length - 2)));
+    const json = await fetch(url).then((response) => response.json());
 
-    const rows = json.table.rows;
-    const users = rows.reduce((users, row, index) => {
-        if (index > 1 && row.c[0] !== null) {
-            const lat = row.c[0].v;
-            const lon = row.c[1].v;
-            const tg = row.c[3].v;
-            const name = row.c[4].v;
-            users.push({ lat, lon, tg, name });
+    let counter = 1;
+    const locations = json.reduce((acc, user) => {
+        if (user.username && user.location && user.location.length) {
+            user.location.map((location) => {
+                acc.push({
+                    id: counter,
+                    lat: location.latitude,
+                    lon: location.longitude,
+                    name: location.name,
+                    tg: user.username,
+                    username: user.name,
+                    userAbout: user.about
+                });
+                counter++;
+            });
         }
-        return users;
+
+        return acc;
     }, []);
 
-    console.log(users);
+    // console.log(locations);
 
     const defaultAvatar =
         window.location.hostname === "localhost"
@@ -41,16 +45,20 @@ const createMap = async (mapboxgl) => {
     const mapSource = {
         type: "FeatureCollection",
         id: "user-markers",
-        features: users.map((user) => ({
+        features: locations.map((location) => ({
             type: "Feature",
             properties: {
-                id: user.tg,
-                url: `https://t.me/${user.tg.replace("@", "")}`,
-                avatar: defaultAvatar
+                id: location.id,
+                url: `https://t.me/${location.tg.replace("@", "")}`,
+                avatar: defaultAvatar,
+                name: location.name.length
+                    ? `${location.username} - ${location.name}`
+                    : location.username,
+                description: `<strong>${location.username}</strong> - <a target="_blank" href="https://t.me/${location.tg}">Telegram<a/><p>${location.userAbout}</p>`
             },
             geometry: {
                 type: "Point",
-                coordinates: [user.lon, user.lat]
+                coordinates: [location.lon, location.lat]
             }
         }))
     };
@@ -61,25 +69,17 @@ const createMap = async (mapboxgl) => {
         cluster: true,
         clusterRadius: 25
     });
-    map.addLayer({
-        id: "users",
-        type: "circle",
-        source: "usersGeojson",
-        filter: ["!=", "cluster", true],
-        paint: {
-            "circle-opacity": 0.0
-        }
-    });
 
     map.addLayer({
         id: "points",
         type: "symbol",
         source: "usersGeojson",
         layout: {
-            "text-field": ["get", "id"],
+            "text-field": ["get", "name"],
             "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
             "text-offset": [0, 1.25],
-            "text-anchor": "top"
+            "text-anchor": "top",
+            "text-size": 12
         }
     });
 
@@ -100,7 +100,7 @@ const createMap = async (mapboxgl) => {
                 if (props.cluster) {
                     // it's a cluster
                     let clusterElement = document.createElement("div");
-                    clusterElement.classList.add("people-map-user-cluster");
+                    clusterElement.classList.add("mapCluster");
                     clusterElement.innerText = props.point_count;
                     const clusterAvatar = getClusterAvatar(coords);
                     clusterElement.style.backgroundImage =
@@ -116,16 +116,19 @@ const createMap = async (mapboxgl) => {
                         });
                     });
                 } else {
-                    // it's a normal marker
-                    let markerElement = document.createElement("a");
-                    markerElement.href = props.url;
-                    markerElement.target = "_blank";
-                    markerElement.classList.add("people-map-user-marker");
+                    let markerElement = document.createElement("div");
+                    markerElement.classList.add("mapMarker");
                     markerElement.style.backgroundImage =
                         "url('" + avatarOrDefault(props.avatar) + "')";
                     marker = new mapboxgl.Marker({
                         element: markerElement
-                    }).setLngLat(coords);
+                    })
+                        .setLngLat(coords)
+                        .setPopup(
+                            new mapboxgl.Popup({ offset: 25 }) // add popups
+                                .setHTML(props.description)
+                        )
+                        .addTo(map);
                 }
             }
             newMarkers[id] = marker;
