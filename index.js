@@ -11,7 +11,7 @@ const createMap = async (mapboxgl) => {
         language: "ru"
     });
 
-    const url = `https://matyagin.ru/surfbot`;
+    const url = `https://bot.letssurf.pro/surfbot`;
 
     const json = await fetch(url).then((response) => response.json());
 
