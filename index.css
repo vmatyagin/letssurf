@@ -1,6 +1,17 @@
 :root {
     --block-bg-color: gray;
 }
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+#surf_map {
+    width: 100%;
+    height: 100%;
+}
 .mapMarker {
     display: block;
     cursor: pointer;
