@@ -26,7 +26,8 @@ const createMap = async (mapboxgl) => {
                     name: location.name,
                     tg: user.username,
                     username: user.name,
-                    userAbout: user.about
+                    userAbout: user.about,
+                    userFamilyStatus: user.family_status
                 });
                 counter++;
             });
@@ -49,12 +50,10 @@ const createMap = async (mapboxgl) => {
             type: "Feature",
             properties: {
                 id: location.id,
-                url: `https://t.me/${location.tg.replace("@", "")}`,
-                avatar: defaultAvatar,
                 name: location.name.length
                     ? `${location.username} - ${location.name}`
                     : location.username,
-                description: `<strong>${location.username}</strong> - <a target="_blank" href="https://t.me/${location.tg}">Telegram<a/><p>${location.userAbout}</p>`
+                description: `<span><span class="marker__emoji">📍</span><a class="marker__user" target="_blank" href="https://t.me/${location.tg}">${location.username}<a/></span><br/><span><span class="marker__emoji">❤️</span>${location.userFamilyStatus}</span><br/><span><span class="marker__emoji">🖥</span>${location.userAbout}</span>`
             },
             geometry: {
                 type: "Point",
@@ -82,9 +81,8 @@ const createMap = async (mapboxgl) => {
                     let clusterElement = document.createElement("div");
                     clusterElement.classList.add("mapCluster");
                     clusterElement.innerText = props.point_count;
-                    const clusterAvatar = getClusterAvatar(coords);
                     clusterElement.style.backgroundImage =
-                        "url('" + avatarOrDefault(clusterAvatar) + "')";
+                        "url('" + defaultAvatar + "')";
                     marker = new mapboxgl.Marker({
                         element: clusterElement
                     }).setLngLat(coords);
@@ -99,7 +97,7 @@ const createMap = async (mapboxgl) => {
                     let markerElement = document.createElement("div");
                     markerElement.classList.add("mapMarker");
                     markerElement.style.backgroundImage =
-                        "url('" + avatarOrDefault(props.avatar) + "')";
+                        "url('" + defaultAvatar + "')";
                     marker = new mapboxgl.Marker({
                         element: markerElement
                     })
@@ -124,24 +122,6 @@ const createMap = async (mapboxgl) => {
         markersOnScreen = newMarkers;
     }
 
-    function getClusterAvatar(coordinates) {
-        let pointPixels = map.project(coordinates);
-        const avatarFeature = mapSource.features.find(function (el) {
-            if (!el.properties.avatar || el.properties.avatar === "null")
-                return;
-            let elPixels = map.project(el.geometry.coordinates);
-            let pixelDistance = Math.sqrt(
-                Math.pow(elPixels.x - pointPixels.x, 2) +
-                    Math.pow(elPixels.y - pointPixels.y, 2)
-            );
-            return Math.abs(pixelDistance) <= 20;
-        });
-        return avatarFeature ? avatarFeature.properties.avatar : defaultAvatar;
-    }
-
-    function avatarOrDefault(avatar) {
-        return avatar && avatar !== "null" ? avatar : defaultAvatar;
-    }
     map.on("load", () => {
         map.addSource("usersGeojson", {
             type: "geojson",

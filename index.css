@@ -45,3 +45,18 @@ body {
 .mapboxgl-popup {
     max-width: 400px;
 }
+
+.mapboxgl-popup-content {
+    border-radius: 10px;
+}
+
+.marker__user {
+    color: inherit;
+}
+
+.marker__emoji {
+    display: inline-block;
+    width: 16px;
+    margin-right: 4px;
+    text-align: center;
+}
