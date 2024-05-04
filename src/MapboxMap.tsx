@@ -37,6 +37,12 @@ export const MapboxMap = ({
             ...initialOptions
         });
 
+        if (mapboxMap.getZoom() < 4) {
+            if (!document.body.classList.contains("zoomed")) {
+                document.body.classList.add("zoomed");
+            }
+        }
+
         setMap(mapboxMap);
         if (onCreated) onCreated(mapboxMap);
 

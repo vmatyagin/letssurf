@@ -108,6 +108,10 @@ body,
     text-align: center;
 }
 
+.zoomed .mapMarker__child span {
+    display: none;
+}
+
 @keyframes pulse {
     0% {
         transform: scale(2);

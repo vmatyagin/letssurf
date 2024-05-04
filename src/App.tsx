@@ -186,6 +186,17 @@ export const App = () => {
             }
         });
 
+        map.on("zoom", () => {
+            if (map.getZoom() < 4) {
+                if (!document.body.classList.contains("zoomed")) {
+                    document.body.classList.add("zoomed");
+                }
+            } else {
+                if (document.body.classList.contains("zoomed")) {
+                    document.body.classList.remove("zoomed");
+                }
+            }
+        });
         map.on("move", updateMarkers);
         map.on("moveend", updateMarkers);
         map.on("resize", updateMarkers);
