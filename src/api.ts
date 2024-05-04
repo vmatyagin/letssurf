@@ -15,7 +15,7 @@ type User = {
 };
 
 export const getLocations = async (): Promise<User[]> => {
-    return await fetch(`http://217.25.94.64/surfbot`).then((response) =>
+    return await fetch(`https://bot.letssurf.pro/surfbot`).then((response) =>
         response.json()
     );
 };
