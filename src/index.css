@@ -25,17 +25,17 @@ body,
     background: -webkit-linear-gradient(
         45deg,
         rgba(152, 207, 195, 0.7),
-        rgb(86, 181, 184)
+        rgba(211, 199, 154, 0.58)
     );
     background: -moz-linear-gradient(
         45deg,
         rgba(152, 207, 195, 0.7),
-        rgb(86, 181, 184)
+        rgba(11, 12, 12, 0.265)
     );
     background: linear-gradient(
         45deg,
         rgba(152, 207, 195, 0.7),
-        rgb(86, 181, 184),
+        rgb(94, 100, 100),
         0.9
     );
 
