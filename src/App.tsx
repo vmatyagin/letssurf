@@ -1,36 +1,48 @@
-let interval;
+import { useState } from "react";
+import mapboxgl from "mapbox-gl";
+import { MapboxMap } from "./MapboxMap";
+import { MapLoadingHolder } from "./MapLoadingHolder";
+import defaultAvatar from "./assets/surfer.png";
+import { getLocations } from "./api";
 
-const loadLocations = async () => {
-    const json = await fetch(`https://bot.letssurf.pro/surfbot`).then(
-        (response) => response.json()
-    );
+const sourceKey = "usersGeojson";
 
-    let counter = 1;
-    return json.reduce((acc, user) => {
-        if (user.username && user.location && user.location.length) {
-            user.location.map((location) => {
-                acc.push({
-                    id: counter,
-                    lat: location.latitude,
-                    lon: location.longitude,
-                    name: location.name,
-                    tg: user.username,
-                    username: user.name,
-                    userAbout: user.about,
-                    userFamilyStatus: user.family_status
-                });
-                counter++;
-            });
-        }
-
-        return acc;
-    }, []);
+type MappedLocation = {
+    id: number;
+    lat: number;
+    lon: number;
+    name: string;
+    tg: string;
+    username: string;
+    userAbout: string;
+    userFamilyStatus: string;
 };
 
-const defaultAvatar =
-    window.location.hostname === "localhost"
-        ? "./assets/surfer.png"
-        : "https://vmatyagin.github.io/letssurf/assets/surfer.png";
+const loadLocations = async (): Promise<MappedLocation[]> => {
+    const users = await getLocations();
+
+    let counter = 1;
+    return users.reduce((acc, user) => {
+        !!user.location.length &&
+            user.location.forEach((location) => {
+                if (user.username) {
+                    acc.push({
+                        id: counter,
+                        lat: location.latitude,
+                        lon: location.longitude,
+                        name: location.name,
+                        tg: user.username,
+                        username: user.name,
+                        userAbout: user.about,
+                        userFamilyStatus: user.family_status
+                    });
+                    counter++;
+                }
+            });
+
+        return acc;
+    }, [] as MappedLocation[]);
+};
 
 const createElement = () => {
     const el = document.createElement("div");
@@ -39,7 +51,11 @@ const createElement = () => {
     return el;
 };
 
-const createCluster = (coords, count, onClick) => {
+const createCluster = (
+    coords: mapboxgl.LngLatLike,
+    count: string,
+    onClick: VoidFunction
+) => {
     const clusterElement = createElement();
     clusterElement.innerText = count;
     clusterElement.addEventListener("click", onClick);
@@ -49,36 +65,37 @@ const createCluster = (coords, count, onClick) => {
     }).setLngLat(coords);
 };
 
-const createUser = (coords, description) => {
+const createUser = (
+    coords: mapboxgl.LngLatLike,
+    name: string,
+    description: string
+) => {
+    const element = createElement();
+    const child = document.createElement("div");
+    child.classList.add("mapMarker__child");
+    const textNode = document.createElement("span");
+    textNode.innerText = name;
+
+    child.appendChild(textNode);
+    element.appendChild(child);
+
     return new mapboxgl.Marker({
-        element: createElement()
+        element
     })
         .setLngLat(coords)
-        .setPopup(
-            new mapboxgl.Popup({ offset: 25 }) // add popups
-                .setHTML(description)
-        );
+        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(description));
 };
 
-const createMap = async (mapboxgl) => {
-    mapboxgl.accessToken =
-        "pk.eyJ1Ijoidm1hdHlhZ2luIiwiYSI6ImNsdTJsdHE2cjA1MGQyb254OTU3bHo5aHEifQ.jsX73SwwLopH36s5ohxByg";
-    const map = new mapboxgl.Map({
-        container: "surf_map",
-        style: "mapbox://styles/mapbox/streets-v12",
-        center: [37.36, 55.45],
-        zoom: 3,
-        language: "ru"
-    });
+export const App = () => {
+    const [loading, setLoading] = useState(true);
+    const onLoaded = async (map: mapboxgl.Map) => {
+        setLoading(false);
+        const locations = await loadLocations();
 
-    const locations = await loadLocations();
-
-    map.on("load", () => {
-        map.addSource("usersGeojson", {
+        map.addSource(sourceKey, {
             type: "geojson",
             data: {
                 type: "FeatureCollection",
-                id: "user-markers",
                 features: locations.map((location) => ({
                     type: "Feature",
                     properties: {
@@ -101,27 +118,25 @@ const createMap = async (mapboxgl) => {
         map.addLayer({
             id: "points",
             type: "symbol",
-            source: "usersGeojson",
-            layout: {
-                "text-field": ["get", "name"],
-                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-                "text-offset": [0, 1.25],
-                "text-anchor": "top",
-                "text-size": 12
-            }
+            source: "usersGeojson"
         });
 
-        const markers = {};
-        let markersOnScreen = {};
+        const markers: Record<number, mapboxgl.Marker> = {};
+        let markersOnScreen: typeof markers = {};
 
         function updateMarkers() {
-            let newMarkers = {};
-            let features = map.querySourceFeatures("usersGeojson");
-            console.warn("updateMarkers", features.length);
+            const newMarkers: typeof markers = {};
+            const features = map.querySourceFeatures(sourceKey);
 
             for (const feature of features) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 const coords = feature.geometry.coordinates;
                 const props = feature.properties;
+
+                if (!props) {
+                    continue;
+                }
 
                 const id = props.cluster_id || props.id;
 
@@ -135,14 +150,14 @@ const createMap = async (mapboxgl) => {
                             () => {
                                 map.flyTo({
                                     center: coords,
-                                    zoom: map.getZoom() + 2,
-                                    offset: [200, 0]
+                                    zoom: map.getZoom() + 2
                                 });
                             }
                         );
                     } else {
                         marker = markers[id] = createUser(
                             coords,
+                            props.name,
                             props.description
                         );
                     }
@@ -158,13 +173,14 @@ const createMap = async (mapboxgl) => {
             markersOnScreen = newMarkers;
         }
         let isInitialJumped = false;
+
         map.on("render", () => {
             if (!map.isSourceLoaded("usersGeojson")) return;
             updateMarkers();
             if (!isInitialJumped) {
                 map.flyTo({
-                    center: [37.36, 55.45],
-                    zoom: 3
+                    center: map.getCenter(),
+                    zoom: map.getZoom()
                 });
                 isInitialJumped = true;
             }
@@ -176,7 +192,11 @@ const createMap = async (mapboxgl) => {
         map.on("idle", updateMarkers);
 
         map.on("click", "points", (e) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             const coordinates = e.features[0].geometry.coordinates.slice();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             const description = e.features[0].properties.description;
 
             while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
@@ -196,20 +216,14 @@ const createMap = async (mapboxgl) => {
         map.on("mouseleave", "points", () => {
             map.getCanvas().style.cursor = "";
         });
-    });
-};
+    };
 
-const start = () => {
-    interval = setInterval(() => {
-        if (window.mapboxgl) {
-            clearInterval(interval);
-            createMap(window.mapboxgl);
-        }
-    }, 250);
+    return (
+        <>
+            <div className="map-wrapper">
+                <MapboxMap onLoaded={onLoaded} />
+            </div>
+            {loading && <MapLoadingHolder />}
+        </>
+    );
 };
-
-if (document.readyState !== "loading") {
-    start();
-} else {
-    document.addEventListener("DOMContentLoaded", start);
-}
