@@ -89,9 +89,7 @@ const createUser = (
 export const App = () => {
     const [loading, setLoading] = useState(true);
     const onLoaded = async (map: mapboxgl.Map) => {
-        setLoading(false);
         const locations = await loadLocations();
-
         map.addSource(sourceKey, {
             type: "geojson",
             data: {
@@ -173,6 +171,8 @@ export const App = () => {
             markersOnScreen = newMarkers;
         }
         let isInitialJumped = false;
+
+        setLoading(false);
 
         map.on("render", () => {
             if (!map.isSourceLoaded("usersGeojson")) return;
