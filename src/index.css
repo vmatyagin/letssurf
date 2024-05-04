@@ -84,6 +84,9 @@ body,
     transform: translate(-50%, 4px);
     display: inline-block;
     width: 150px;
+    color: #000000;
+    text-shadow: none;
+    font-weight: 500;
 }
 
 .mapboxgl-popup {
